@@ -52,6 +52,9 @@ class AuthTest extends TestCase
         ]);
 
         $responseNewPassword->assertStatus(200);
+        $responseNewPassword->assertJsonFragment([
+            'message' => 'Senha alterada com sucesso'
+        ]);
     }
 
     /** @test */

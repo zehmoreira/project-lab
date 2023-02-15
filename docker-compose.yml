@@ -25,6 +25,7 @@ services:
             - mysql
             - redis
             - mailpit
+            - minio
     mysql:
         image: 'mysql/mysql-server:8.0'
         ports:
@@ -64,6 +65,35 @@ services:
                 - ping
             retries: 3
             timeout: 5s
+    sqlite3:
+        image: nouchka/sqlite3:latest
+        stdin_open: true
+        tty: true
+        networks:
+            - sail
+        volumes:
+            - './db/:/root/db/'
+    minio:
+        image: 'minio/minio:latest'
+        ports:
+            - '${FORWARD_MINIO_PORT:-9000}:9000'
+            - '${FORWARD_MINIO_CONSOLE_PORT:-8900}:8900'
+        environment:
+            MINIO_ROOT_USER: sail
+            MINIO_ROOT_PASSWORD: password
+        volumes:
+            - 'sail-minio:/data/minio'
+        networks:
+            - sail
+        command: 'minio server /data/minio --console-address ":8900"'
+        healthcheck:
+            test:
+                - CMD
+                - curl
+                - '-f'
+                - 'http://localhost:9000/minio/health/live'
+            retries: 3
+            timeout: 5s
     mailpit:
         image: 'axllent/mailpit:latest'
         ports:
@@ -78,4 +108,8 @@ volumes:
     sail-mysql:
         driver: local
     sail-redis:
+        driver: local
+    sqlite3:
+        driver: local
+    sail-minio:
         driver: local
